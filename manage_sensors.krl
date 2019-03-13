@@ -36,10 +36,11 @@ ruleset io.picolabs.manage_sensors {
     number = "+18018089633"
     
     get_all_temperatures = function(){
-      wrangler:children().map(function(x){
-        eci = x{"eci"};
+      mysubscriptions = subscriptions:established("Tx_role", "sensor").klog("mysubscription");
+      mysubscriptions.map(function(x){
+        eci = x["Tx"].klog(Tx);
         url = "http://localhost:8080/sky/cloud/" + eci + "/io.picolabs.temperature_store/temperatures";
-        {}.put(x{"name"}, http:get(url){"content"}.decode())
+        {}.put(x["Tx_role"], http:get(url){"content"}.decode())
       });
     }
   }
@@ -147,7 +148,7 @@ ruleset io.picolabs.manage_sensors {
   
   rule get_all_temperatures{
     select when sensor temperatures
-      foreach ent:sensors setting (s)
+      foreach subscriptions.established().filter(funtion(x){x["Tx_role"] == "sensor"}) setting (s)
       pre{
         eci = s.klog("ECI")
         url = "http://localhost:8080/sky/cloud/" + eci + "/io.picolabs.temperature_store/temperatures"
